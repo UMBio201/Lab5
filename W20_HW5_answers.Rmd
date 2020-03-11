@@ -1,0 +1,358 @@
+---
+title: "Homework 5"
+author: "Kristi Gdanetz MacCready"
+date: "02/05/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "~/Box Sync/Schmidt_Lab/Bio201_teaching/W20_Protocols/Lab5/")
+```
+
+# Load packages
+```{r Load packages, message=FALSE, warning=FALSE, include=FALSE, results='hide'}
+library(tidyverse)
+library(readxl)
+library(broom)
+library(cowplot)
+set.seed(7)
+```
+
+Save any data frames generated to curated_data directory, save all plots to figures directory. Based on assumptions, clearly state which statistical test will be used and why. Include any statistics (p- or R-values) as comments after the tests.
+
+# Question 1
+
+Use the SCFA wide dataframe from Lab 5. Check assumptions, conduct statistical tests, make a plot, to answer the question, "Which supplement causes the greatest increase in acetate concentrations?"
+```{r}
+# import and filter data set (q1_df)
+q1_df <- read_delim(file = "raw_data/scfa_wide.txt", 
+                        delim = "\t", escape_double = FALSE, 
+                        trim_ws = TRUE, na=c("NA"),
+                        col_names = TRUE,
+                        col_types = cols(participant_id = col_character(),
+                                         semester = col_character(),
+                                         supplement_consumed = col_character(),
+                                         quantity_compliant = col_character(),
+                                         frequency = col_character(),
+                                         acetate_delta = col_double(),
+                                         butyrate_delta = col_double(),
+                                         propionate_delta = col_double())) %>%
+  filter(semester != "Winter2015",
+         quantity_compliant != "no") %>%
+  select(-butyrate_delta, -propionate_delta)
+```
+
+### Check assumptions 
+```{r}
+# check sample sizes
+q1_df %>%
+  group_by(supplement_consumed) %>%
+  summarise(sample_size = n())
+```
+
+```{r}
+# check normality of each group 
+s1 <- q1_df %>%
+  filter(supplement_consumed == "Accessible") 
+shapiro.test(s1$acetate_delta) #p-value = ?
+
+s2 <- q1_df %>%
+  filter(supplement_consumed == "Arabino") 
+shapiro.test(s2$acetate_delta) #p-value = ?
+
+s3 <- q1_df %>%
+  filter(supplement_consumed == "BRMPS+Accessible")
+shapiro.test(s3$acetate_delta) #p-value = ?
+
+s4 <- q1_df %>%
+  filter(supplement_consumed == "HiMaize") 
+shapiro.test(s4$acetate_delta) #p-value = ?
+
+s5 <- q1_df %>%
+  filter(supplement_consumed == "HiMaize+BRMPS") 
+shapiro.test(s5$acetate_delta) #p-value = ?
+
+s6 <- q1_df %>%
+  filter(supplement_consumed == "Inulin") 
+shapiro.test(s6$acetate_delta) #p-value = ?
+```
+
+```{r}
+# check variances 
+bartlett.test(acetate_delta ~ supplement_consumed, data = q1_df)
+```
+
+### Test 
+```{r}
+# anova
+aov_q1 <- aov(acetate_delta ~ supplement_consumed, data = q1_df)
+summary(aov_q1)
+
+# kruskall-wallace
+kruskal.test(acetate_delta ~ supplement_consumed, data = q1_df)
+```
+
+### Plot
+```{r}
+# make and save plot (q1_plot)
+q1_plot <- q1_df %>%
+  ggplot(aes(x = supplement_consumed,
+             y = acetate_delta,
+             color = supplement_consumed)) +
+  geom_hline(yintercept = 0,
+             linetype = "dashed") + 
+  geom_violin() + 
+  geom_jitter() + 
+  xlab(NULL) + 
+  ylab("Acetate mmol/kg (wk3 - wk1)") + 
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) 
+
+save_plot(q1_plot, nrow = 1, ncol = 1, base_height = 4, base_width = 8,
+          path = "~/Box Sync/Schmidt_Lab/Bio201_teaching/W20_Protocols/Lab5/figures/q1_plot.pdf")
+```
+
+What are your conclusions regarding the reseach question? 
+
+<type answer here>
+
+
+# Question 2
+
+Use the SCFA wide dataframe from Lab 5. Check assumptions, conduct statistical tests, make a plot, to answer the question, "Which supplement causes the greatest increase in propionate concentrations?"
+### Import & filter
+```{r}
+# import and filter data set (q2_df)
+q2_df <- read_delim(file = "raw_data/scfa_wide.txt", 
+                        delim = "\t", escape_double = FALSE, 
+                        trim_ws = TRUE, na=c("NA"),
+                        col_names = TRUE,
+                        col_types = cols(participant_id = col_character(),
+                                         semester = col_character(),
+                                         supplement_consumed = col_character(),
+                                         quantity_compliant = col_character(),
+                                         frequency = col_character(),
+                                         acetate_delta = col_double(),
+                                         butyrate_delta = col_double(),
+                                         propionate_delta = col_double())) %>%
+  filter(semester != "Winter2015",
+         quantity_compliant != "no") %>%
+  select(-butyrate_delta, -acetate_delta)
+```
+
+### Check assumptions
+```{r}
+# check sample sizes
+q2_df %>%
+  group_by(supplement_consumed) %>%
+  summarise(sample_size = n())
+```
+
+```{r}
+# check normality of each group 
+s1 <- q2_df %>%
+  filter(supplement_consumed == "Accessible") 
+shapiro.test(s1$propionate_delta) #p-value = ?
+
+s2 <- q2_df %>%
+  filter(supplement_consumed == "Arabino") 
+shapiro.test(s2$propionate_delta) #p-value = ?
+
+s3 <- q2_df %>%
+  filter(supplement_consumed == "BRMPS+Accessible")
+shapiro.test(s3$propionate_delta) #p-value = ?
+
+s4 <- q2_df %>%
+  filter(supplement_consumed == "HiMaize") 
+shapiro.test(s4$propionate_delta) #p-value = ?
+
+s5 <- q2_df %>%
+  filter(supplement_consumed == "HiMaize+BRMPS") 
+shapiro.test(s5$propionate_delta) #p-value = ?
+
+s6 <- q2_df %>%
+  filter(supplement_consumed == "Inulin") 
+shapiro.test(s6$propionate_delta) #p-value = ?
+```
+
+```{r}
+# check variances 
+bartlett.test(propionate_delta ~ supplement_consumed, data = q2_df)
+# enter arguments with the following formula: continuous ~ categorical 
+```
+
+### Statistical test 
+```{r}
+# anova
+aov_q2 <- aov(propionate_delta ~ supplement_consumed, data = q2_df)
+summary(aov_q2)
+
+# kruskall-wallace
+kruskal.test(propionate_delta ~ supplement_consumed, data = q2_df)
+```
+
+### Plot 
+```{r}
+# make and save plot (q2_plot)
+q2_plot <- q2_df %>%
+  ggplot(aes(x = supplement_consumed,
+             y = propionate_delta,
+             color = supplement_consumed)) +
+  geom_hline(yintercept = 0,
+             linetype = "dashed") + 
+  geom_violin() + 
+  geom_jitter() + 
+  xlab(NULL) + 
+  ylab("Propionate mmol/kg (wk3 - wk1)") + 
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) 
+
+save_plot(q2_plot, nrow = 1, ncol = 1, base_height = 4, base_width = 8,
+          path = "~/Box Sync/Schmidt_Lab/Bio201_teaching/W20_Protocols/Lab5/figures/q2_plot.pdf")
+```
+
+What are your conclusions regarding the reseach question?
+
+<type answer here>
+
+
+# Question 3
+
+Use the SCFA wide dataframe from Lab 5. Subset and filter the data frame, check assumptions, and choose the appropriate statistical tests, and create a plot to answer the following research question: "Does the proportion of acetate reponses differ between individuals who consumed BRMPS potato (BRMPS) or LOODAT potato supplements?"
+### Import & filter 
+```{r}
+q3_df <- read_delim(file = "raw_data/scfa_wide.txt", 
+                        delim = "\t", escape_double = FALSE, 
+                        trim_ws = TRUE, na=c("NA"),
+                        col_names = TRUE,
+                        col_types = cols(participant_id = col_character(),
+                                         semester = col_character(),
+                                         supplement_consumed = col_character(),
+                                         quantity_compliant = col_character(),
+                                         frequency = col_character(),
+                                         acetate_delta = col_double(),
+                                         butyrate_delta = col_double(),
+                                         propionate_delta = col_double())) %>%
+  filter(supplement_consumed == "LOODAT" | supplement_consumed == "BRMPS",
+         semester != "Winter2015",
+         quantity_compliant != "no") %>%
+  select(-butyrate_delta, -propionate_delta) %>%
+  add_column(acetate_status = "-") %>%
+  drop_na()
+
+q3_df$acetate_status[q3_df$acetate_delta > 0] <- "positive"
+q3_df$acetate_status[q3_df$acetate_delta < 0] <- "negative"
+```
+
+### Check assumptions
+* Random samples (this is met because supplements are randomly assigned)
+* Normally distributed data (verify in same method as a t-test)
+* Independent samples (the two groups in our question are not linked in any way)
+```{r}
+# normality check in positive group
+p1 <- q3_df %>%
+  filter(acetate_status == "positive") 
+shapiro.test(p1$acetate_delta) #p-value = ?
+
+# normality check in negative group
+n1 <- q3_df %>%
+  filter(acetate_status == "negative") 
+shapiro.test(n1$acetate_delta) #p-value = ?
+```
+
+### Proportion test
+```{r}
+# create count table 
+q3_tab <- with(q3_df, table(supplement_consumed, acetate_status))
+
+# conduct statistical test
+prop.test(q3_tab, 
+          alternative = "two.sided",
+          correct = FALSE)
+```
+
+### Make table 
+
+| | Increased acetate | Total participants | Percent increase |
+|:-----:|:-----:|:-----:|:-----:|
+| BRMPS | N | Y | Z% |
+| LOODAT | n | y | z% | 
+
+
+What are your conclusions regarding the reseach question?
+
+<type answer here>
+
+
+# Question 4
+
+Use the SCFA wide dataframe from Lab 5. Subset and filter the data frame, check assumptions, and choose the appropriate statistical tests, and create a plot to answer the following research question: "Does the proportion of propionate reponses differ between individuals who consumed BRMPS potato (BRMPS) or LOODAT potato supplements?"
+### Import & filter
+```{r}
+# import and filter data set (q4_df)
+q4_df <- read_delim(file = "raw_data/scfa_wide.txt", 
+                        delim = "\t", escape_double = FALSE, 
+                        trim_ws = TRUE, na=c("NA"),
+                        col_names = TRUE,
+                        col_types = cols(participant_id = col_character(),
+                                         semester = col_character(),
+                                         supplement_consumed = col_character(),
+                                         quantity_compliant = col_character(),
+                                         frequency = col_character(),
+                                         acetate_delta = col_double(),
+                                         butyrate_delta = col_double(),
+                                         propionate_delta = col_double())) %>%
+  filter(supplement_consumed == "LOODAT" | supplement_consumed == "BRMPS",
+         semester != "Winter2015",
+         quantity_compliant != "no") %>%
+  select(-butyrate_delta, -acetate_delta) %>%
+  add_column(propionate_status = "-") %>%
+  drop_na()
+
+q4_df$propionate_status[q4_df$propionate_delta > 0] <- "positive"
+q4_df$propionate_status[q4_df$propionate_delta < 0] <- "negative"
+```
+
+### Check assumptions
+* Random samples (this is met because supplements are randomly assigned)
+* Normally distributed data (verify in same method as a t-test)
+* Independent samples (the two groups in our question are not linked in any way)
+```{r}
+# normality check in positive group
+p2 <- q4_df %>%
+  filter(propionate_status == "positive") 
+shapiro.test(p2$propionate_delta) #p-value = ?
+
+# normality check in negative group
+n2 <- q4_df %>%
+  filter(propionate_status == "negative") 
+shapiro.test(n2$propionate_delta) #p-value = ?
+```
+
+### Proportion test
+```{r}
+# create count table 
+q4_tab <- with(q4_df, table(supplement_consumed, propionate_status))
+
+# conduct statistical test
+prop.test(q4_tab, 
+          alternative = "two.sided",
+          correct = FALSE)
+```
+
+### Make table 
+
+| | Increased propionate | Total participants | Percent increase |
+|:-----:|:-----:|:-----:|:-----:|
+| BRMPS | N | Y | Z% |
+| LOODAT | n | y | z% | 
+
+
+What are your conclusions regarding the reseach question?
+
+<type answer here>
+
+
+-----
+end
